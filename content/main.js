@@ -59,8 +59,30 @@
 
 	function findLibrarySection(homeContainer) {
 		if (!homeContainer || typeof homeContainer.querySelectorAll !== "function") return null;
-		const sections = Array.from(homeContainer.querySelectorAll(":scope > .verticalSection, :scope > .horizontalSection"));
-		return sections.find(sectionContainsLibraries) || null;
+		const directSections = Array.from(
+			homeContainer.querySelectorAll(":scope > .verticalSection, :scope > .horizontalSection")
+		);
+		const wrappedSections = Array.from(
+			homeContainer.querySelectorAll(
+				":scope > .verticalSections > .verticalSection, :scope > .verticalSections > .horizontalSection"
+			)
+		);
+		const sections = Array.from(new Set(directSections.concat(wrappedSections)));
+		const semanticMatch = sections.find(sectionContainsLibraries);
+		if (semanticMatch) return semanticMatch;
+
+		// Emby 4.9.5 wraps the home rows in .verticalSections and no longer exposes
+		// CollectionFolder objects on the rendered cards. The user-view row is still
+		// the first visible populated row in that wrapper.
+		if (wrappedSections.length) {
+			return wrappedSections.find((section) => {
+				if (section.classList && section.classList.contains("hide")) return false;
+				return typeof section.querySelector === "function"
+					&& Boolean(section.querySelector(".itemsContainer .card[data-id]"));
+			}) || null;
+		}
+
+		return null;
 	}
 
 	function sleep(ms) {

@@ -46,6 +46,29 @@ test("supports a rendered card fallback when container items are not exposed", (
 	assert.equal(sectionContainsLibraries(section), true);
 });
 
+test("finds the first populated row inside the Emby 4.9.5 verticalSections wrapper", () => {
+	const hidden = {
+		classList: { contains: (name) => name === "hide" },
+		querySelector: () => ({ dataset: { id: "hidden" } }),
+		querySelectorAll: () => [],
+	};
+	const libraries = {
+		classList: { contains: () => false },
+		querySelector: (selector) => selector === ".itemsContainer .card[data-id]"
+			? { dataset: { id: "3" } }
+			: null,
+		querySelectorAll: () => [],
+	};
+	const home = {
+		querySelectorAll(selector) {
+			if (selector.startsWith(":scope > .verticalSections")) return [hidden, libraries];
+			return [];
+		},
+	};
+
+	assert.equal(findLibrarySection(home), libraries);
+});
+
 test("does not treat the first arbitrary section as a library section", () => {
 	const home = {
 		querySelectorAll() {
