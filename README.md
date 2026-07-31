@@ -90,6 +90,8 @@ globalThis.EmbyCrxConfig = {
     moveLibrarySectionOnDesktop: true,
     showOverview: true,
     detailButtonText: "MORE",
+    visibleLibraryIds: [],
+    bannerLibraryIds: [],
     includeItemTypes: "Movie,Series",
     sortBy: "ProductionYear,PremiereDate,SortName",
     sortOrder: "Descending",
@@ -97,7 +99,21 @@ globalThis.EmbyCrxConfig = {
 };
 ```
 
+媒体库范围配置：
+
+- `visibleLibraryIds`：横幅内展示的媒体库卡片 ID；空数组 `[]` 表示展示当前用户可见的全部媒体库。
+- `bannerLibraryIds`：横幅轮播内容来源的媒体库 ID；空数组 `[]` 表示从当前用户可访问的全部媒体库取图。
+- ID 可以写成字符串数组，也兼容逗号分隔字符串；重复和空 ID 会自动清理。
+
+例如只展示媒体库 `3` 和 `11708`，同时仅从媒体库 `3` 生成横幅：
+
+```javascript
+visibleLibraryIds: ["3", "11708"],
+bannerLibraryIds: ["3"],
+```
+
 重新执行安装脚本时，现有的 `config.js` 不会被覆盖。新版默认配置保存在同目录的 `config.default.js`。
+因此从旧版本升级后，需要手动把上述两个字段加入现有 `config.js`。
 
 修改后重启 Emby，并强制刷新浏览器缓存。
 

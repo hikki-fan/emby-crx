@@ -9,6 +9,8 @@
 		moveLibrarySectionOnDesktop: true,
 		showOverview: true,
 		detailButtonText: "MORE",
+		visibleLibraryIds: [],
+		bannerLibraryIds: [],
 		includeItemTypes: "Movie,Series",
 		sortBy: "ProductionYear,PremiereDate,SortName",
 		sortOrder: "Descending",

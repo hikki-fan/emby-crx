@@ -36,6 +36,8 @@ grep -q '<!-- emby-crx-4.9:start -->' "${DASHBOARD_DIR}/index.html"
 grep -q 'emby-crx/config.js' "${DASHBOARD_DIR}/index.html"
 test -f "${DASHBOARD_DIR}/emby-crx/main.js"
 test -f "${DASHBOARD_DIR}/emby-crx/config.js"
+grep -q 'visibleLibraryIds' "${DASHBOARD_DIR}/emby-crx/config.default.js"
+grep -q 'bannerLibraryIds' "${DASHBOARD_DIR}/emby-crx/config.default.js"
 
 CHECKSUM_BEFORE=$(cksum "${DASHBOARD_DIR}/emby-crx/config.js")
 sh "${SOURCE_ROOT}/server/install.sh" "$DASHBOARD_DIR"

@@ -9,11 +9,24 @@
 		moveLibrarySectionOnDesktop: true,
 		showOverview: true,
 		detailButtonText: "MORE",
+		visibleLibraryIds: [],
+		bannerLibraryIds: [],
 		includeItemTypes: "Movie,Series",
 		sortBy: "ProductionYear,PremiereDate,SortName",
 		sortOrder: "Descending",
 		maxImageWidth: 3000,
 	});
+
+	function normalizeIdList(value) {
+		const values = Array.isArray(value)
+			? value
+			: typeof value === "string"
+				? value.split(",")
+				: [];
+		return Array.from(new Set(values
+			.map((item) => String(item == null ? "" : item).trim())
+			.filter(Boolean)));
+	}
 
 	function mergeConfig(input) {
 		const config = Object.assign({}, DEFAULT_CONFIG, input || {});
@@ -21,6 +34,8 @@
 		config.rotationIntervalMs = Math.max(3000, Number(config.rotationIntervalMs) || DEFAULT_CONFIG.rotationIntervalMs);
 		config.initializationTimeoutMs = Math.max(5000, Number(config.initializationTimeoutMs) || DEFAULT_CONFIG.initializationTimeoutMs);
 		config.maxImageWidth = Math.min(6000, Math.max(640, Number(config.maxImageWidth) || DEFAULT_CONFIG.maxImageWidth));
+		config.visibleLibraryIds = normalizeIdList(config.visibleLibraryIds);
+		config.bannerLibraryIds = normalizeIdList(config.bannerLibraryIds);
 		return config;
 	}
 
@@ -35,6 +50,15 @@
 		if (Array.isArray(container.items)) return container.items;
 		if (Array.isArray(container.Items)) return container.Items;
 		return [];
+	}
+
+	function getLibraryCardId(card) {
+		if (!card) return "";
+		const item = card.item || card._item;
+		const value = card.dataset && card.dataset.id
+			|| typeof card.getAttribute === "function" && card.getAttribute("data-id")
+			|| item && item.Id;
+		return value == null ? "" : String(value);
 	}
 
 	function sectionContainsLibraries(section) {
@@ -212,6 +236,7 @@
 			this.homeContainer = homeContainer;
 			this.librarySection = librarySection;
 			this.librarySection.classList.add("misty-library-section");
+			this.applyLibraryCardFilter();
 			this.banner = this.buildBanner(slides);
 			homeContainer.prepend(this.banner);
 
@@ -237,8 +262,33 @@
 				EnableTotalRecordCount: false,
 			};
 			const userId = apiClient.getCurrentUserId();
-			const response = await apiClient.getItems(userId, query);
-			const items = response && Array.isArray(response.Items) ? response.Items : [];
+			const libraryIds = this.config.bannerLibraryIds;
+			const responses = await Promise.all((libraryIds.length ? libraryIds : [null]).map(async (libraryId) => {
+				const libraryQuery = libraryId ? Object.assign({}, query, { ParentId: libraryId }) : query;
+				try {
+					return await apiClient.getItems(userId, libraryQuery);
+				} catch (error) {
+					console.warn("[Emby Crx] Failed to load banner items for library:", libraryId || "all", error);
+					return { Items: [] };
+				}
+			}));
+			const groups = responses.map((response) => response && Array.isArray(response.Items) ? response.Items : []);
+			const items = [];
+			const seenItemIds = new Set();
+			for (let itemIndex = 0; items.length < this.config.bannerItemCount; itemIndex++) {
+				let foundItem = false;
+				for (const group of groups) {
+					const item = group[itemIndex];
+					if (!item) continue;
+					foundItem = true;
+					const itemId = item.Id == null ? "" : String(item.Id);
+					if (!itemId || seenItemIds.has(itemId)) continue;
+					seenItemIds.add(itemId);
+					items.push(item);
+					if (items.length >= this.config.bannerItemCount) break;
+				}
+				if (!foundItem) break;
+			}
 			const details = await Promise.all(items.map(async (item) => {
 				try {
 					return await apiClient.getItem(userId, item.Id);
@@ -373,8 +423,26 @@
 			}
 		}
 
+		applyLibraryCardFilter() {
+			if (!this.librarySection) return;
+			const visibleIds = new Set(this.config.visibleLibraryIds);
+			this.librarySection.querySelectorAll(".card").forEach((card) => {
+				const cardId = getLibraryCardId(card);
+				const shouldHide = visibleIds.size > 0 && Boolean(cardId) && !visibleIds.has(cardId);
+				card.classList.toggle("misty-library-filtered", shouldHide);
+			});
+		}
+
+		clearLibraryCardFilter() {
+			if (!this.librarySection) return;
+			this.librarySection.querySelectorAll(".card").forEach((card) => {
+				card.classList.remove("misty-library-filtered");
+			});
+		}
+
 		restoreLibrarySection() {
 			if (!this.librarySection) return;
+			this.clearLibraryCardFilter();
 			this.librarySection.classList.remove("misty-library-section");
 			const placement = this.libraryPlacement;
 			if (placement && placement.parent && placement.parent.isConnected && this.librarySection.isConnected) {
@@ -389,7 +457,8 @@
 
 		animateLibraryCards() {
 			if (!this.librarySection) return;
-			const cards = this.librarySection.querySelectorAll(".card");
+			const cards = Array.from(this.librarySection.querySelectorAll(".card"))
+				.filter((card) => !card.classList.contains("misty-library-filtered"));
 			cards.forEach((card, index) => {
 				global.setTimeout(() => {
 					if (card.isConnected) card.classList.add("misty-banner-library-show");
@@ -474,8 +543,10 @@
 		EmbyCrxHome,
 		findLibrarySection,
 		getContainerItems,
+		getLibraryCardId,
 		isHomeRouteValue,
 		mergeConfig,
+		normalizeIdList,
 		sectionContainsLibraries,
 	};
 

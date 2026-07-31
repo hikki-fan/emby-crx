@@ -31,6 +31,10 @@
 	z-index: 2;
 }
 
+.view:not(.hide) .misty-library-section .misty-library-filtered {
+	display: none !important;
+}
+
 .view:not(.hide) .misty-library-section .cardText {
 	position: absolute;
 	top: 0;
