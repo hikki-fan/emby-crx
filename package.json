@@ -1,0 +1,10 @@
+{
+  "name": "emby-crx-server-adapter",
+  "version": "4.9.5-1",
+  "private": true,
+  "scripts": {
+    "check": "node --check content/main.js && node --check server/config.js",
+    "test": "node --test tests/*.test.js",
+    "test:server": "sh tests/server-install.sh"
+  }
+}

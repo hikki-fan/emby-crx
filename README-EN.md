@@ -1,64 +1,73 @@
-# Emby Crx
+# Emby Crx Server Adapter
 
-_Emby Enhancement/Beautification Plugin (for Chrome Core Browser)_
+English | [简体中文](README.md)
 
-# Warning: The media library cover is an original design. Please do not imitate it without authorization!
+This fork adapts [Nolovenodie/emby-crx](https://github.com/Nolovenodie/emby-crx) to the Emby Server 4.9.5.0 Web dashboard. It keeps the original home banner and library-card presentation while replacing the obsolete `.section0` dependency with semantic `CollectionFolder` section detection.
 
----
+## Compatibility
 
-## Animation Preview (Because the LOGO entrance animation is too prioritized, the effect may be slightly worse. The latest version has been changed. The video is waiting for update. You can try the specific effect yourself)
+- Checked against the `system/dashboard-ui` files shipped in the official Emby Server `4.9.5.0` package.
+- Modifies the server-hosted Emby Web UI only.
+- Does not modify native TV or mobile clients that bundle their own UI.
+- Emby upgrades or Docker container recreation may require reinstalling the adapter.
 
-https://user-images.githubusercontent.com/18238152/235517763-5ee7fe21-87e7-414f-a1cd-b2c6fadbb8d5.mp4
+The installer validates actual dashboard signatures and stops without changing `index.html` when they are missing.
 
-## Usage Instructions
+## Docker installation
 
-If you do not need the media library to display the library name in the center after hovering the mouse, please change the 37th line in the       static\css\style.css file
+```sh
+git clone https://github.com/hikki-fan/emby-crx.git
+cd emby-crx
+git switch codex/emby-4.9.5-server
+sh server/docker-install.sh EmbyServer /system/dashboard-ui
+docker restart EmbyServer
+```
 
-## Usage Method
+Then hard-refresh the Emby Web page.
+The Docker wrappers use container user `0` by default because `/system` is
+normally read-only to the Emby service account. Override it with the
+`EMBY_CRX_DOCKER_USER` environment variable when required by a custom image.
 
-**Two methods only need to deploy one**
+## Configuration
 
-> Plugin Version
+The first installation creates:
 
-_Requires users to load plugins_
+```text
+/system/dashboard-ui/emby-crx/config.js
+```
 
-Chrome Extension Settings > Developer Mode > Load the unzipped extension > Select the source code directly
+Reinstalling preserves this file. The current defaults are copied to `config.default.js`.
 
-> Server Version
+## Uninstall
 
-_No need to use plugins, deploy directly to the server, users can use it seamlessly_
+```sh
+sh server/docker-uninstall.sh EmbyServer /system/dashboard-ui
+docker restart EmbyServer
+```
 
-# Docker Version (If the script is updated, just re-execute)
+The installer keeps an emergency backup at:
 
-# Note: You need to have access to Github. If you don’t understand, please leave a message in the group
+```text
+/system/dashboard-ui/index.html.emby-crx.backup
+```
 
-# EmbyServer is the container name. If your container name is not this, please change it to the correct one!
+To restore the exact pre-installation `index.html` in Docker:
 
-# Reference tutorial (unofficial): 
+```sh
+sh server/docker-uninstall.sh EmbyServer /system/dashboard-ui --restore-backup
+docker restart EmbyServer
+```
 
-    https://mj.tk/2023/07/Emby
-# Docker Install Shell Scripts:
-    docker exec EmbyServer /bin/sh -c 'cd /system/dashboard-ui && wget -O - https://tinyurl.com/2p97xcpd | sh'
+## Tests
 
-# Normal version
+```sh
+npm run check
+npm test
+sh tests/server-install.sh
+```
 
-# Reference tutorial (unofficial): 
+See the [Chinese README](README.md) for configuration fields and detailed troubleshooting.
 
-    https://cangshui.net/5167.html
+## License
 
----
-
-## TODO
-
-- Encapsulate as a single JS/CSS, For client use
-- Encapsulated in Misty Media client
-- Playback jump to third-party player function
-- Online version detection and update
-
----
-
-## Effect preview
-
-# Warning: The media library cover is an original design, please do not imitate it without authorization!
-
-![1](https://user-images.githubusercontent.com/18238152/235510774-666d9006-cbad-4b97-9a73-ad5334cb7eee.png) ![2](https://user-images.githubusercontent.com/18238152/235510867-4b71a870-6be6-46a5-b988-527d667b020d.png) ![3](https://user-images.githubusercontent.com/18238152/235510872-ef88ae87-6693-4c11-b7ad-0f05e1a5c583.png) ![4](https://user-images.githubusercontent.com/18238152/235510874-f2fe4715-eb68-4f7a-ac49-50dc5f4ef5aa.png)
+This fork retains the upstream [MIT License](LICENSE). The original visual design and implementation belong to the upstream author.

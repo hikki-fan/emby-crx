@@ -1,59 +1,164 @@
-# Emby Crx
+# Emby Crx 服务端适配版
 
-## EN & CN
-- [简体中文](README.md)
-- [English](README-EN.md)
+[English](README-EN.md) | 简体中文
 
-_Emby 增强/美化 插件 (适用于 Chrome 内核浏览器)_
+这是 [Nolovenodie/emby-crx](https://github.com/Nolovenodie/emby-crx) 的服务端适配分支，保留原项目的 Emby Web 首页横幅、媒体库卡片动画和详情入口，并适配 Emby Server 4.9.5.0 的新版首页栏目结构。
 
-# 警告: 媒体库封面为原创设计, 未经授权请勿模仿使用!
+## 兼容性
 
----
+- 已针对 Emby Server `4.9.5.0` 官方安装包中的 `system/dashboard-ui` 做结构校验。
+- 不再依赖旧版首页的 `.section0`。
+- 按栏目中的 `CollectionFolder` 数据识别媒体库栏目，因此不依赖用户的首页排列顺序。
+- 只修改服务器提供的 Emby Web UI；不会改变自带前端资源的电视、手机或其他原生客户端。
+- Emby 更新或重建 Docker 容器后，通常需要重新运行安装脚本。
 
-## 动画预览 (因 LOGO 入场动画过于优先, 效果可能略差, 最新版已更改, 视频等待更新, 具体效果可以自行尝试)
+其他 Emby 版本会在浏览器控制台给出提示，但不会被安装脚本仅凭版本号强制阻止。安装脚本会检查实际 dashboard 结构，不符合预期时直接停止。
 
-https://user-images.githubusercontent.com/18238152/235517763-5ee7fe21-87e7-414f-a1cd-b2c6fadbb8d5.mp4
+## 相比原版的主要修复
 
-## 使用须知
+- 支持 Emby 4.9 的 `.verticalSection` 首页结构。
+- 不再永久等待不存在的 `.section0`。
+- 页面切换时清理轮播并恢复媒体库栏目位置。
+- 使用 `Promise.all` 保证横幅数据完成后再渲染。
+- 标题和简介通过 `textContent` 写入，避免直接拼接未经转义的 HTML。
+- 图片或 API 加载失败时移除加载层，并输出明确的控制台错误。
+- 安装资源全部来自本地 checkout，不再执行远程 `wget | sh`。
+- 安装过程自动备份、原子更新且可重复执行；用户配置会在重装时保留。
 
-如不需要 媒体库 鼠标悬浮 后居中显示库名, 请更改 static\css\style.css 文件内 第 37 行
+## Docker / NAS 安装
 
-## 使用方法
+先克隆本仓库并进入目录：
 
-**两种方法 只需部署一种即可**
+```sh
+git clone https://github.com/hikki-fan/emby-crx.git
+cd emby-crx
+git switch codex/emby-4.9.5-server
+```
 
-> 插件版
+默认容器名为 `EmbyServer`，dashboard 路径为 `/system/dashboard-ui`：
 
-_需要用户装载插件_
+```sh
+sh server/docker-install.sh EmbyServer /system/dashboard-ui
+docker restart EmbyServer
+```
 
-Chrome 扩展设置 > 开发者模式 > 加载已解压的扩展程序 > 直接选择源码即可
+安装后在浏览器中强制刷新 Emby Web：
 
-> 服务器版
+- Windows/Linux：`Ctrl + F5`
+- macOS：`Command + Shift + R`
 
-_无需使用插件, 直接部署至服务端, 用户无缝使用_
+如果容器名称不是 `EmbyServer`，把命令中的第一个参数改为真实容器名。
+脚本默认使用容器内的 root 用户修改 `/system`。特殊镜像可以通过
+`EMBY_CRX_DOCKER_USER` 环境变量覆盖。
 
-    # Docker 版 (如遇脚本更新, 重新执行即可)
-    # 注意: 需要能访问的上Github的环境, 如果不懂 请在群内@我留言
-    # EmbyServer 为容器名, 如果你的容器名不是这个 请改成正确的!
-    # 参考教程(非官方): https://mj.tk/2023/07/Emby
-    docker exec EmbyServer /bin/sh -c 'cd /system/dashboard-ui && wget -O - https://tinyurl.com/2p97xcpd | sh'
+## 非 Docker 安装
 
-    # 正常版
-    # 参考教程(非官方): https://cangshui.net/5167.html
+在 Emby 服务器本机执行，并把路径改为实际的 dashboard 目录：
 
----
+```sh
+sudo sh server/install.sh /opt/emby-server/system/dashboard-ui
+```
 
-## TODO
+常见 Docker 镜像内路径是：
 
--   封装为单 JS/CSS, 供客户端使用
--   内封装进 Misty Media 客户端
--   播放跳转第三方播放器功能
--   版本在线检测更新
+```text
+/system/dashboard-ui
+```
 
----
+安装前可以单独检查：
 
-## 效果预览
+```sh
+sh server/check-compatibility.sh /system/dashboard-ui
+```
 
-# 警告: 媒体库封面为原创设计, 未经授权请勿模仿使用!
+## 配置
 
-![1](https://user-images.githubusercontent.com/18238152/235510774-666d9006-cbad-4b97-9a73-ad5334cb7eee.png) ![2](https://user-images.githubusercontent.com/18238152/235510867-4b71a870-6be6-46a5-b988-527d667b020d.png) ![3](https://user-images.githubusercontent.com/18238152/235510872-ef88ae87-6693-4c11-b7ad-0f05e1a5c583.png) ![4](https://user-images.githubusercontent.com/18238152/235510874-f2fe4715-eb68-4f7a-ac49-50dc5f4ef5aa.png)
+首次安装会生成：
+
+```text
+/system/dashboard-ui/emby-crx/config.js
+```
+
+默认配置：
+
+```javascript
+globalThis.EmbyCrxConfig = {
+    enabled: true,
+    bannerItemCount: 10,
+    rotationIntervalMs: 8000,
+    initializationTimeoutMs: 30000,
+    moveLibrarySectionOnDesktop: true,
+    showOverview: true,
+    detailButtonText: "MORE",
+    includeItemTypes: "Movie,Series",
+    sortBy: "ProductionYear,PremiereDate,SortName",
+    sortOrder: "Descending",
+    maxImageWidth: 3000
+};
+```
+
+重新执行安装脚本时，现有的 `config.js` 不会被覆盖。新版默认配置保存在同目录的 `config.default.js`。
+
+修改后重启 Emby，并强制刷新浏览器缓存。
+
+## 卸载
+
+Docker：
+
+```sh
+sh server/docker-uninstall.sh EmbyServer /system/dashboard-ui
+docker restart EmbyServer
+```
+
+非 Docker：
+
+```sh
+sudo sh /system/dashboard-ui/emby-crx/uninstall.sh /system/dashboard-ui
+```
+
+安装时创建的应急备份位于：
+
+```text
+/system/dashboard-ui/index.html.emby-crx.backup
+```
+
+如果需要完整恢复该备份：
+
+```sh
+sh /system/dashboard-ui/emby-crx/uninstall.sh /system/dashboard-ui --restore-backup
+```
+
+Docker 完整回退：
+
+```sh
+sh server/docker-uninstall.sh EmbyServer /system/dashboard-ui --restore-backup
+docker restart EmbyServer
+```
+
+备份可能早于后续 Emby 更新，因此正常卸载优先使用默认的“只移除注入块”模式。
+
+## 开发与测试
+
+无需安装第三方 npm 依赖：
+
+```sh
+npm run check
+npm test
+sh tests/server-install.sh
+```
+
+测试覆盖首页路由、媒体库语义识别、配置边界、重复安装、配置保留、卸载和备份保留。
+
+## 故障排查
+
+如果首页没有出现横幅：
+
+1. 确认当前用户的首页包含“我的媒体”栏目。
+2. 打开浏览器开发者工具，搜索 `[Emby Crx]`。
+3. 确认至少有电影或剧集具备 Backdrop 图片。
+4. 检查 `index.html` 中是否只有一组 `emby-crx-4.9` 标记。
+5. 强制刷新浏览器，必要时清除该 Emby 地址的站点缓存。
+
+## 授权
+
+本项目继承上游的 [MIT License](LICENSE)。视觉设计和原始实现归上游作者所有。

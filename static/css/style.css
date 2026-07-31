@@ -27,11 +27,11 @@
 	-webkit-flex-wrap: initial !important;
 }
 
-.view:not(.hide) .section0 {
+.view:not(.hide) .misty-library-section {
 	z-index: 2;
 }
 
-.view:not(.hide) .section0 .cardText {
+.view:not(.hide) .misty-library-section .cardText {
 	position: absolute;
 	top: 0;
 	display: flex; /* 如果不需要媒体库标题显示, 请将flex改为none */
@@ -46,43 +46,43 @@
 	opacity: 0;
 }
 
-.view:not(.hide) .section0 .backdropCard:hover .cardText {
+.view:not(.hide) .misty-library-section .backdropCard:hover .cardText {
 	opacity: 1;
 }
 
-.view:not(.hide) .section0 .cardText button {
+.view:not(.hide) .misty-library-section .cardText button {
 	text-decoration: none;
 }
 
-.view:not(.hide) .section0 .cardOverlayContainer {
+.view:not(.hide) .misty-library-section .cardOverlayContainer {
 	background: none;
 }
 
-.view:not(.hide) .section0 .cardOverlayContainer label,
-.view:not(.hide) .section0 .sectionTitleContainer {
+.view:not(.hide) .misty-library-section .cardOverlayContainer label,
+.view:not(.hide) .misty-library-section .sectionTitleContainer {
 	display: none !important;
 }
 
-.view:not(.hide) .section0 .cardBox-touchzoom {
+.view:not(.hide) .misty-library-section .cardBox-touchzoom {
 	box-shadow: 0 8px 10px rgb(0 0 0 / 15%);
 }
 
-.view:not(.hide) .section0 .backdropCard {
+.view:not(.hide) .misty-library-section .backdropCard {
 	transition: all 1.5s cubic-bezier(0, 1.75, .25, 1) 0s;
 }
 
-.view:not(.hide) .section0 .backdropCard:hover {
+.view:not(.hide) .misty-library-section .backdropCard:hover {
 	transform: scale(1.1) !important;
 }
 
-.view:not(.hide) .section0 .scrollbuttoncontainer {
+.view:not(.hide) .misty-library-section .scrollbuttoncontainer {
 	top: 0;
 	bottom: calc(.8em - min(.72em, max(.48em, 1.78vw)) / 2);
 	background-color: rgba(0, 0, 0, 0);
 	overflow: visible;
 }
 
-.view:not(.hide) .section0 .scrollbuttoncontainer:hover > .emby-scrollbuttons-scrollbutton{
+.view:not(.hide) .misty-library-section .scrollbuttoncontainer:hover > .emby-scrollbuttons-scrollbutton{
 	background-color: rgba(0, 0, 0, .5);
 	transform: scale(.85) !important;
 }
@@ -160,6 +160,27 @@
 
 .misty-loading .mdl-spinner__layer-1 {
 	border-color: #fff;
+}
+
+.misty-loading-spinner {
+	width: 2.5rem;
+	height: 2.5rem;
+	border: .2rem solid rgba(255, 255, 255, .25);
+	border-top-color: #fff;
+	border-radius: 50%;
+	animation: misty-loading-spin .8s linear infinite;
+}
+
+.misty-loading-leave {
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity .3s ease;
+}
+
+@keyframes misty-loading-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .misty-banner-library {
@@ -280,21 +301,22 @@
 		height: auto;
 		bottom: 0;
 		top: unset;
-
-		> div > p {
-			font-size: 1rem;
-		}
-
-		button{
-			transition-duration: 0s;
-			transition-delay: 0s;
-		}
 	}
+
+	.misty-banner-info > div > p {
+		font-size: 1rem;
+	}
+
+	.misty-banner-info button {
+		transition-duration: 0s;
+		transition-delay: 0s;
+	}
+
 	.misty-banner-logo 	{
 		display: none !important;
 	}
 
-	.section0>div>div>.backdropCard {
+	.misty-library-section > div > div > .backdropCard {
 		--backdrop-cards: 1.5;
 	}
 }
