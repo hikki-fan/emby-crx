@@ -159,6 +159,17 @@ sh tests/server-install.sh
 4. 检查 `index.html` 中是否只有一组 `emby-crx-4.9` 标记。
 5. 强制刷新浏览器，必要时清除该 Emby 地址的站点缓存。
 
+如果页面显示“拒绝访问路径 `/dashboard-ui/index.html`”，说明旧版安装
+脚本把 `index.html` 留成了仅 root 可读。执行：
+
+```sh
+sudo docker exec -u 0 emby chmod 644 /system/dashboard-ui/index.html
+sudo docker restart emby
+```
+
+然后更新本仓库并重新运行安装脚本。当前版本会保留原文件的所有者和
+权限。
+
 ## 授权
 
 本项目继承上游的 [MIT License](LICENSE)。视觉设计和原始实现归上游作者所有。

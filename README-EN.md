@@ -68,6 +68,16 @@ sh tests/server-install.sh
 
 See the [Chinese README](README.md) for configuration fields and detailed troubleshooting.
 
+If Emby reports access denied for `/dashboard-ui/index.html` after an older
+installation, restore the readable mode and restart:
+
+```sh
+sudo docker exec -u 0 emby chmod 644 /system/dashboard-ui/index.html
+sudo docker restart emby
+```
+
+The current installer preserves the original file owner and mode.
+
 ## License
 
 This fork retains the upstream [MIT License](LICENSE). The original visual design and implementation belong to the upstream author.

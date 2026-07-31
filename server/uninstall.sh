@@ -35,6 +35,9 @@ if [ "$MODE" = "--restore-backup" ]; then
 	printf 'Restored backup: %s\n' "$BACKUP_FILE"
 else
 	TMP_INDEX=$(mktemp "${DASHBOARD_DIR}/.emby-crx-uninstall.XXXXXX")
+	# Preserve the readable owner/mode instead of moving a 0600 mktemp file
+	# into place.
+	cp -p -- "$INDEX_FILE" "$TMP_INDEX"
 	awk -v start="$START_MARKER" -v end="$END_MARKER" '
 		index($0, start) { skipping = 1; next }
 		index($0, end) { skipping = 0; next }

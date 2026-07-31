@@ -53,6 +53,9 @@ fi
 
 TMP_CLEAN=$(mktemp "${DASHBOARD_DIR}/.emby-crx-clean.XXXXXX")
 TMP_INDEX=$(mktemp "${DASHBOARD_DIR}/.emby-crx-index.XXXXXX")
+# Keep the original owner and mode. mktemp normally creates a root-only 0600
+# file, which would make Emby return an access-denied error after the mv below.
+cp -p -- "$INDEX_FILE" "$TMP_INDEX"
 
 awk -v start="$START_MARKER" -v end="$END_MARKER" '
 	index($0, start) { skipping = 1; next }
