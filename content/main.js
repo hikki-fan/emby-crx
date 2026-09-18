@@ -155,6 +155,12 @@
 		return /^4\.(?:10|[1-9]\d+)\./.test(String(serverVersion || ""));
 	}
 
+	function setHomeHeaderOverlay(enabled) {
+		const body = global.document && global.document.body;
+		if (!body || !body.classList || typeof body.classList.toggle !== "function") return;
+		body.classList.toggle("misty-home-header-overlay", Boolean(enabled));
+	}
+
 	class EmbyCrxHome {
 		constructor(config) {
 			this.config = mergeConfig(config);
@@ -253,6 +259,7 @@
 			this.librarySection = librarySection;
 			this.apiClient = apiClient;
 			this.serverVersion = serverVersion;
+			setHomeHeaderOverlay(true);
 			this.librarySection.classList.add("misty-library-section");
 			this.applyLibraryCardFilter();
 			this.banner = this.buildBanner(slides);
@@ -580,6 +587,7 @@
 			this.mounting = false;
 			global.clearInterval(this.rotationTimer);
 			this.rotationTimer = null;
+			setHomeHeaderOverlay(false);
 			this.hideLoading();
 			this.restoreLibrarySection();
 			if (this.banner) this.banner.remove();
@@ -603,6 +611,7 @@
 		mergeConfig,
 		normalizeIdList,
 		requiresDetachedLibrarySafety,
+		setHomeHeaderOverlay,
 		sectionContainsLibraries,
 	};
 

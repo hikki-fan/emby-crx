@@ -13,6 +13,7 @@ const {
 	mergeConfig,
 	normalizeIdList,
 	requiresDetachedLibrarySafety,
+	setHomeHeaderOverlay,
 	sectionContainsLibraries,
 } = require("../content/main.js");
 
@@ -156,6 +157,24 @@ test("uses the managed overlap layout for an Emby 4.10 desktop home row", () => 
 	assert.deepEqual(added, [
 		"banner:misty-banner-managed-library",
 		"library:misty-library-section-managed",
+	]);
+});
+
+test("only enables the full-width header overlay while the CRX home is active", () => {
+	const originalDocument = global.document;
+	const calls = [];
+	global.document = {
+		body: { classList: { toggle: (...args) => calls.push(args) } },
+	};
+	try {
+		setHomeHeaderOverlay(true);
+		setHomeHeaderOverlay(false);
+	} finally {
+		global.document = originalDocument;
+	}
+	assert.deepEqual(calls, [
+		["misty-home-header-overlay", true],
+		["misty-home-header-overlay", false],
 	]);
 });
 
