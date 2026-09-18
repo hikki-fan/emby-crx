@@ -34,5 +34,9 @@ test("reserves space below the managed library overlay for following home rows",
 
 	const managedLibraryRule = css.match(/\.misty-library-section\.misty-library-section-managed\s*\{([^}]+)\}/);
 	assert.ok(managedLibraryRule, "missing managed library overlap rule");
-	assert.match(managedLibraryRule[1], /margin-bottom:\s*clamp\(8rem,\s*10vw,\s*16rem\)/);
+	assert.match(managedLibraryRule[1], /display:\s*flex/);
+	assert.match(managedLibraryRule[1], /justify-content:\s*flex-end/);
+	assert.match(managedLibraryRule[1], /min-height:\s*clamp\(12rem,\s*16vw,\s*20rem\)/);
+	assert.match(managedLibraryRule[1], /margin-bottom:\s*0/);
+	assert.match(css, /margin-bottom:\s*calc\(-1 \* clamp\(12rem,\s*16vw,\s*20rem\)\)/);
 });

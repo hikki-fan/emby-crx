@@ -128,16 +128,21 @@ body.misty-home-header-overlay .view:not(.hide) .scrollSlider.padded-top-page,
  * Emby's route controller. */
 @media screen and (min-width: 62.501em) {
 	.view:not(.hide) .misty-banner.misty-banner-managed-library {
-		margin-bottom: clamp(-26rem, -22vw, -12rem);
+		/* Match the legacy banner composition: the library row occupies the
+		 * lower part of the hero, while the next native section begins after it. */
+		margin-bottom: calc(-1 * clamp(12rem, 16vw, 20rem));
 	}
 
 	.view:not(.hide) .misty-library-section.misty-library-section-managed {
 		position: relative;
 		z-index: 3;
-		/* The library row is visually pulled into the banner. Reserve that
-		 * overlap below it so the next Emby home row (for example Continue
-		 * Watching) starts below the first viewport instead of peeking through. */
-		margin-bottom: clamp(8rem, 10vw, 16rem);
+		/* Keep the composed hero (banner plus library cards) at least one
+		 * overlay tall, so Continue Watching cannot peek into the first screen. */
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		min-height: clamp(12rem, 16vw, 20rem);
+		margin-bottom: 0;
 	}
 
 	.view:not(.hide) .misty-library-section.misty-library-section-managed .backdropCard {
