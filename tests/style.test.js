@@ -25,3 +25,14 @@ test("removes only the active CRX home's header offset", () => {
 	assert.match(css, /body\.misty-home-header-overlay \.view:not\(\.hide\) \.scrollSlider\.padded-top-page/);
 	assert.match(css, /padding-top:\s*0\s*!important/);
 });
+
+test("reserves space below the managed library overlay for following home rows", () => {
+	const css = fs.readFileSync(
+		path.join(__dirname, "..", "static", "css", "style.css"),
+		"utf8"
+	);
+
+	const managedLibraryRule = css.match(/\.misty-library-section\.misty-library-section-managed\s*\{([^}]+)\}/);
+	assert.ok(managedLibraryRule, "missing managed library overlap rule");
+	assert.match(managedLibraryRule[1], /margin-bottom:\s*clamp\(8rem,\s*10vw,\s*16rem\)/);
+});

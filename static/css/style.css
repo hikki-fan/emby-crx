@@ -134,6 +134,10 @@ body.misty-home-header-overlay .view:not(.hide) .scrollSlider.padded-top-page,
 	.view:not(.hide) .misty-library-section.misty-library-section-managed {
 		position: relative;
 		z-index: 3;
+		/* The library row is visually pulled into the banner. Reserve that
+		 * overlap below it so the next Emby home row (for example Continue
+		 * Watching) starts below the first viewport instead of peeking through. */
+		margin-bottom: clamp(8rem, 10vw, 16rem);
 	}
 
 	.view:not(.hide) .misty-library-section.misty-library-section-managed .backdropCard {
