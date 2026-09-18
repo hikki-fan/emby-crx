@@ -15,3 +15,13 @@ test("prevents the home banner from collapsing inside Emby's flex scroller", () 
 	assert.ok(bannerRule, "missing .misty-banner rule");
 	assert.match(bannerRule[1], /flex\s*:\s*0\s+0\s+auto\s*;/);
 });
+
+test("removes only the active CRX home's header offset", () => {
+	const css = fs.readFileSync(
+		path.join(__dirname, "..", "static", "css", "style.css"),
+		"utf8"
+	);
+
+	assert.match(css, /body\.misty-home-header-overlay \.view:not\(\.hide\) \.scrollSlider\.padded-top-page/);
+	assert.match(css, /padding-top:\s*0\s*!important/);
+});
