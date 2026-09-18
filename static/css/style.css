@@ -103,6 +103,26 @@
 	overflow: hidden;
 }
 
+/* Emby 4.10 owns the library section, so it stays in the original DOM. These
+ * rules recreate the legacy banner overlap without taking that node away from
+ * Emby's route controller. */
+@media screen and (min-width: 62.501em) {
+	.view:not(.hide) .misty-banner.misty-banner-managed-library {
+		margin-bottom: clamp(-26rem, -22vw, -12rem);
+	}
+
+	.view:not(.hide) .misty-library-section.misty-library-section-managed {
+		position: relative;
+		z-index: 3;
+	}
+
+	.view:not(.hide) .misty-library-section.misty-library-section-managed .backdropCard {
+		transition-duration: 0;
+		transform: translateY(80%);
+		opacity: 0;
+	}
+}
+
 .misty-banner-cover {
 	width: 100%;
 	max-height: 100vh;
