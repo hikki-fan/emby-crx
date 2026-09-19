@@ -241,6 +241,15 @@
 			this.applyLibraryCardFilter();
 			this.banner = this.buildBanner(slides);
 			librarySection.parentNode.insertBefore(this.banner, librarySection);
+			this.heroOffsetElements = [];
+			for (let node = this.banner.parentElement; node && node !== document.body; node = node.parentElement) {
+				if (node.classList.contains("padded-top-page")) {
+					node.classList.add("misty-home-hero-offset");
+					this.heroOffsetElements.push(node);
+				}
+				if (node.classList.contains("view")) break;
+			}
+			document.body.classList.add("misty-home-hero-active");
 
 			this.moveLibrarySectionIntoBanner();
 			this.activateSlide(0);
@@ -429,7 +438,8 @@
 			const update = () => {
 				const padding = parseFloat(global.getComputedStyle(overlay).paddingBottom) || 0;
 				const height = row.getBoundingClientRect().height;
-				row.style.setProperty("margin-top", `${-(height + padding)}px`, "important");
+				const gap = parseFloat(global.getComputedStyle(row.parentNode).rowGap) || 0;
+				row.style.setProperty("margin-top", `${-(height + padding + gap)}px`, "important");
 				row.style.setProperty("margin-bottom", `${padding}px`, "important");
 				row.style.setProperty("position", "relative");
 				overlay.style.paddingBottom = `${height + padding}px`;
@@ -546,6 +556,9 @@
 		}
 
 		unmount() {
+			for (const node of this.heroOffsetElements || []) node.classList.remove("misty-home-hero-offset");
+			this.heroOffsetElements = [];
+			if (global.document && document.body) document.body.classList.remove("misty-home-hero-active");
 			this.mountToken++;
 			this.mounting = false;
 			global.clearInterval(this.rotationTimer);

@@ -22,6 +22,16 @@
 	padding-top: 0 !important;
 }
 
+/* Mark only the banner's actual ancestors, including the 4.10 tab scroller. */
+.misty-home-hero-offset.padded-top-page {
+	padding-top: 0 !important;
+}
+
+body.misty-home-hero-active .skinHeader {
+	background-color: transparent !important;
+	background-image: linear-gradient(rgba(0, 0, 0, .5), transparent) !important;
+}
+
 .view:not(.hide) .itemsContainer-finepointerwrap {
 	flex-wrap: initial !important;
 	-webkit-flex-wrap: initial !important;

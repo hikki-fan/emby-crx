@@ -36,7 +36,7 @@ test("library overlay preserves native parent and state, measures height and res
 	const row = { parentNode: parent, style, nativeState, getBoundingClientRect: () => ({ height }),
 		classList: { remove() {} }, querySelectorAll: () => [] };
 	const overlay = { style: { removeProperty() {} } };
-	global.getComputedStyle = () => ({ paddingBottom: "24px" });
+	global.getComputedStyle = node => node === parent ? { rowGap: "32px" } : { paddingBottom: "24px" };
 	global.addEventListener = () => {};
 	global.removeEventListener = () => {};
 	global.ResizeObserver = class { constructor(fn) { callback = fn; } observe() {} disconnect() { disconnected = true; } };
@@ -48,12 +48,12 @@ test("library overlay preserves native parent and state, measures height and res
 		controller.moveLibrarySectionIntoBanner();
 		assert.equal(row.parentNode, parent);
 		assert.equal(row.nativeState, nativeState);
-		assert.equal(values.get("margin-top"), "-204px");
+		assert.equal(values.get("margin-top"), "-236px");
 		assert.equal(values.get("margin-bottom"), "24px");
 		// The row and its margins add zero height after the hero, just as before.
-		assert.equal(height + parseFloat(values.get("margin-top")) + parseFloat(values.get("margin-bottom")), 0);
+		assert.equal(32 + height + parseFloat(values.get("margin-top")) + parseFloat(values.get("margin-bottom")), 0);
 		height = 240; callback();
-		assert.equal(values.get("margin-top"), "-264px");
+		assert.equal(values.get("margin-top"), "-296px");
 		controller.restoreLibrarySection();
 		assert.equal(disconnected, true);
 		assert.equal(values.get("margin-top"), "4px");
