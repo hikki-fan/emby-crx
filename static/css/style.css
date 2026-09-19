@@ -18,26 +18,6 @@
 	background-color: unset !important;
 }
 
-/* Emby 4.10 renders the page header outside the home view. Scope the overlay
- * to the active CRX home only, so Home/Favorites stay above the backdrop while
- * every non-home screen keeps Emby's normal header. */
-body.misty-home-header-overlay .skinHeader,
-body.misty-home-header-overlay .skinHeader-withBackground,
-body.misty-home-header-overlay .skinHeader-withBackground.headroom-scrolling {
-	left: 0 !important;
-	right: 0 !important;
-	width: 100% !important;
-	box-sizing: border-box;
-	z-index: 10;
-	background-color: transparent !important;
-	background-image: linear-gradient(to bottom, rgba(0, 0, 0, .78), rgba(0, 0, 0, .35) 58%, transparent) !important;
-}
-
-/* The Emby 4.10 home view no longer receives the legacy data-type marker.
- * The CRX body class is set only after the banner has mounted, so removing the
- * normal header offset here makes the backdrop begin at the very top while
- * preserving Emby's standard spacing everywhere else. */
-body.misty-home-header-overlay .view:not(.hide) .scrollSlider.padded-top-page,
 .view[data-type=home]:not(.hide) > div:nth-child(1) .scrollSlider.padded-top-page {
 	padding-top: 0 !important;
 }
@@ -121,35 +101,6 @@ body.misty-home-header-overlay .view:not(.hide) .scrollSlider.padded-top-page,
 	position: relative;
 	flex: 0 0 auto;
 	overflow: hidden;
-}
-
-/* Emby 4.10 owns the library section, so it stays in the original DOM. These
- * rules recreate the legacy banner overlap without taking that node away from
- * Emby's route controller. */
-@media screen and (min-width: 62.501em) {
-	.view:not(.hide) .misty-banner.misty-banner-managed-library {
-		/* Match the legacy banner composition: the library row occupies the
-		 * lower part of the hero, while the next native section begins after it. */
-		margin-bottom: calc(-1 * clamp(12rem, 16vw, 20rem));
-	}
-
-	.view:not(.hide) .misty-library-section.misty-library-section-managed {
-		position: relative;
-		z-index: 3;
-		/* Keep the composed hero (banner plus library cards) at least one
-		 * overlay tall, so Continue Watching cannot peek into the first screen. */
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-		min-height: clamp(12rem, 16vw, 20rem);
-		margin-bottom: 0;
-	}
-
-	.view:not(.hide) .misty-library-section.misty-library-section-managed .backdropCard {
-		transition-duration: 0;
-		transform: translateY(80%);
-		opacity: 0;
-	}
 }
 
 .misty-banner-cover {

@@ -138,29 +138,6 @@
 		});
 	}
 
-	function getServerVersion(apiClient) {
-		try {
-			return apiClient && typeof apiClient.serverVersion === "function"
-				? String(apiClient.serverVersion() || "")
-				: "";
-		} catch (_) {
-			return "";
-		}
-	}
-
-	function requiresDetachedLibrarySafety(serverVersion) {
-		// Emby 4.10 keeps references to its home-row container while routes and
-		// cards are being initialized. Reparenting that container can leave the
-		// route lifecycle pointing at a stale API client.
-		return /^4\.(?:10|[1-9]\d+)\./.test(String(serverVersion || ""));
-	}
-
-	function setHomeHeaderOverlay(enabled) {
-		const body = global.document && global.document.body;
-		if (!body || !body.classList || typeof body.classList.toggle !== "function") return;
-		body.classList.toggle("misty-home-header-overlay", Boolean(enabled));
-	}
-
 	class EmbyCrxHome {
 		constructor(config) {
 			this.config = mergeConfig(config);
@@ -175,7 +152,6 @@
 			this.librarySection = null;
 			this.libraryPlacement = null;
 			this.apiClient = null;
-			this.serverVersion = "";
 			this.activeIndex = 0;
 			this.onRouteChanged = this.reconcile.bind(this);
 		}
@@ -240,7 +216,10 @@
 				this.config.initializationTimeoutMs,
 				100
 			);
-			const serverVersion = getServerVersion(apiClient);
+			const serverVersion = typeof apiClient.serverVersion === "function" ? apiClient.serverVersion() : "";
+			if (serverVersion && !/^4\.9\./.test(serverVersion)) {
+				console.warn(`[Emby Crx] This adapter was tested with Emby 4.9.5.0; detected ${serverVersion}.`);
+			}
 
 			const librarySection = await waitFor(
 				() => findLibrarySection(homeContainer),
@@ -256,14 +235,12 @@
 			if (token !== this.mountToken || !homeContainer.isConnected) return;
 
 			this.homeContainer = homeContainer;
-			this.librarySection = librarySection;
 			this.apiClient = apiClient;
-			this.serverVersion = serverVersion;
-			setHomeHeaderOverlay(true);
+			this.librarySection = librarySection;
 			this.librarySection.classList.add("misty-library-section");
 			this.applyLibraryCardFilter();
 			this.banner = this.buildBanner(slides);
-			this.insertBanner(homeContainer, librarySection);
+			homeContainer.prepend(this.banner);
 
 			this.moveLibrarySectionIntoBanner();
 			this.activateSlide(0);
@@ -272,30 +249,7 @@
 			this.hideLoading();
 		}
 
-		insertBanner(homeContainer, librarySection) {
-			const useManagedLayout = requiresDetachedLibrarySafety(this.serverVersion)
-				&& this.config.moveLibrarySectionOnDesktop
-				&& !this.isMobile();
-			if (useManagedLayout) {
-				// Keep Emby's managed library row in its original parent. The class
-				// restores the legacy visual overlap with CSS instead of DOM moves.
-				const parent = librarySection && librarySection.parentNode;
-				if (parent && typeof parent.insertBefore === "function") {
-					this.banner.classList.add("misty-banner-managed-library");
-					librarySection.classList.add("misty-library-section-managed");
-					parent.insertBefore(this.banner, librarySection);
-					return;
-				}
-			}
-			homeContainer.prepend(this.banner);
-		}
-
 		async loadSlides(apiClient) {
-			if (!apiClient || typeof apiClient.getCurrentUserId !== "function"
-				|| typeof apiClient.getItems !== "function" || typeof apiClient.getItem !== "function"
-				|| typeof apiClient.getImageUrl !== "function") {
-				throw new Error("Emby API client is not ready.");
-			}
 			const query = {
 				ImageTypes: "Backdrop",
 				EnableImageTypes: "Logo,Backdrop",
@@ -465,7 +419,6 @@
 
 		moveLibrarySectionIntoBanner() {
 			if (!this.config.moveLibrarySectionOnDesktop || this.isMobile() || !this.librarySection || !this.banner) return;
-			if (requiresDetachedLibrarySafety(this.serverVersion)) return;
 			const parent = this.librarySection.parentNode;
 			this.libraryPlacement = {
 				parent,
@@ -502,7 +455,6 @@
 			if (!this.librarySection) return;
 			this.clearLibraryCardFilter();
 			this.librarySection.classList.remove("misty-library-section");
-			this.librarySection.classList.remove("misty-library-section-managed");
 			const placement = this.libraryPlacement;
 			if (placement && placement.parent && placement.parent.isConnected && this.librarySection.isConnected) {
 				if (placement.nextSibling && placement.nextSibling.parentNode === placement.parent) {
@@ -587,15 +539,13 @@
 			this.mounting = false;
 			global.clearInterval(this.rotationTimer);
 			this.rotationTimer = null;
-			setHomeHeaderOverlay(false);
 			this.hideLoading();
 			this.restoreLibrarySection();
 			if (this.banner) this.banner.remove();
 			this.banner = null;
+			this.apiClient = null;
 			this.homeContainer = null;
 			this.librarySection = null;
-			this.apiClient = null;
-			this.serverVersion = "";
 			this.activeIndex = 0;
 		}
 	}
@@ -604,14 +554,11 @@
 		DEFAULT_CONFIG,
 		EmbyCrxHome,
 		findLibrarySection,
-		getServerVersion,
 		getContainerItems,
 		getLibraryCardId,
 		isHomeRouteValue,
 		mergeConfig,
 		normalizeIdList,
-		requiresDetachedLibrarySafety,
-		setHomeHeaderOverlay,
 		sectionContainsLibraries,
 	};
 

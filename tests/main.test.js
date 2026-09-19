@@ -7,13 +7,10 @@ global.__EMBY_CRX_DISABLE_AUTO_START__ = true;
 const {
 	EmbyCrxHome,
 	findLibrarySection,
-	getServerVersion,
 	getLibraryCardId,
 	isHomeRouteValue,
 	mergeConfig,
 	normalizeIdList,
-	requiresDetachedLibrarySafety,
-	setHomeHeaderOverlay,
 	sectionContainsLibraries,
 } = require("../content/main.js");
 
@@ -133,49 +130,6 @@ test("filters media-library cards by visibleLibraryIds and restores them on clea
 
 	controller.clearLibraryCardFilter();
 	assert.equal(cards[2].classList.contains("misty-library-filtered"), false);
-});
-
-test("uses the managed overlap layout for an Emby 4.10 desktop home row", () => {
-	assert.equal(requiresDetachedLibrarySafety("4.9.5.0"), false);
-	assert.equal(requiresDetachedLibrarySafety("4.10.0.40"), true);
-	assert.equal(requiresDetachedLibrarySafety("4.11.0.0"), true);
-	assert.equal(getServerVersion({ serverVersion: () => "4.10.0.40" }), "4.10.0.40");
-
-	const added = [];
-	const calls = [];
-	const controller = new EmbyCrxHome();
-	controller.serverVersion = "4.10.0.40";
-	controller.banner = { classList: { add: (name) => added.push(`banner:${name}`) } };
-	const library = {
-		classList: { add: (name) => added.push(`library:${name}`) },
-		parentNode: { insertBefore: (...args) => calls.push(args) },
-	};
-	controller.isMobile = () => false;
-	controller.insertBanner({ prepend: () => { throw new Error("must keep the row adjacent in 4.10"); } }, library);
-
-	assert.deepEqual(calls, [[controller.banner, library]]);
-	assert.deepEqual(added, [
-		"banner:misty-banner-managed-library",
-		"library:misty-library-section-managed",
-	]);
-});
-
-test("only enables the full-width header overlay while the CRX home is active", () => {
-	const originalDocument = global.document;
-	const calls = [];
-	global.document = {
-		body: { classList: { toggle: (...args) => calls.push(args) } },
-	};
-	try {
-		setHomeHeaderOverlay(true);
-		setHomeHeaderOverlay(false);
-	} finally {
-		global.document = originalDocument;
-	}
-	assert.deepEqual(calls, [
-		["misty-home-header-overlay", true],
-		["misty-home-header-overlay", false],
-	]);
 });
 
 test("only builds slides from items that actually have backdrop artwork", async () => {
