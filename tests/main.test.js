@@ -26,6 +26,43 @@ function createSection(items, cardTypes) {
 	};
 }
 
+test("library overlay preserves native parent and state, measures height and restores styles", () => {
+	const previous = [global.getComputedStyle, global.addEventListener, global.removeEventListener, global.ResizeObserver];
+	const values = new Map([["margin-top", "4px"]]);
+	const style = { getPropertyValue: k => values.get(k) || "", getPropertyPriority: () => "",
+		setProperty: (k,v) => values.set(k,v), removeProperty: k => values.delete(k) };
+	let callback, disconnected = false, height = 180;
+	const parent = {}, nativeState = { items: [{ Id: "library", ServerId: "server" }] };
+	const row = { parentNode: parent, style, nativeState, getBoundingClientRect: () => ({ height }),
+		classList: { remove() {} }, querySelectorAll: () => [] };
+	const overlay = { style: { removeProperty() {} } };
+	global.getComputedStyle = () => ({ paddingBottom: "24px" });
+	global.addEventListener = () => {};
+	global.removeEventListener = () => {};
+	global.ResizeObserver = class { constructor(fn) { callback = fn; } observe() {} disconnect() { disconnected = true; } };
+	try {
+		const controller = new EmbyCrxHome();
+		controller.isMobile = () => false;
+		controller.librarySection = row;
+		controller.banner = { querySelector: () => overlay };
+		controller.moveLibrarySectionIntoBanner();
+		assert.equal(row.parentNode, parent);
+		assert.equal(row.nativeState, nativeState);
+		assert.equal(values.get("margin-top"), "-204px");
+		assert.equal(values.get("margin-bottom"), "24px");
+		// The row and its margins add zero height after the hero, just as before.
+		assert.equal(height + parseFloat(values.get("margin-top")) + parseFloat(values.get("margin-bottom")), 0);
+		height = 240; callback();
+		assert.equal(values.get("margin-top"), "-264px");
+		controller.restoreLibrarySection();
+		assert.equal(disconnected, true);
+		assert.equal(values.get("margin-top"), "4px");
+		assert.equal(values.has("position"), false);
+	} finally {
+		[global.getComputedStyle, global.addEventListener, global.removeEventListener, global.ResizeObserver] = previous;
+	}
+});
+
 test("recognizes both Emby hash variants for the home route", () => {
 	assert.equal(isHomeRouteValue("#!/home", "/web/index.html"), true);
 	assert.equal(isHomeRouteValue("#/home?serverId=1", "/web/index.html"), true);

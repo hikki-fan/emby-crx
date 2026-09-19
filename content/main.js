@@ -240,7 +240,7 @@
 			this.librarySection.classList.add("misty-library-section");
 			this.applyLibraryCardFilter();
 			this.banner = this.buildBanner(slides);
-			homeContainer.prepend(this.banner);
+			librarySection.parentNode.insertBefore(this.banner, librarySection);
 
 			this.moveLibrarySectionIntoBanner();
 			this.activateSlide(0);
@@ -419,19 +419,36 @@
 
 		moveLibrarySectionIntoBanner() {
 			if (!this.config.moveLibrarySectionOnDesktop || this.isMobile() || !this.librarySection || !this.banner) return;
-			const parent = this.librarySection.parentNode;
-			this.libraryPlacement = {
-				parent,
-				nextSibling: this.librarySection.nextSibling,
+			// Keep the live custom elements attached to their original controller.
+			// Match the old flex-end overlay using the actual row height and padding,
+			// rather than viewport guesses or disconnecting/reconnecting the row.
+			const row = this.librarySection;
+			const overlay = this.banner.querySelector(".misty-banner-library");
+			const properties = ["margin-top", "margin-bottom", "position"];
+			const saved = properties.map((key) => [key, row.style.getPropertyValue(key), row.style.getPropertyPriority(key)]);
+			const update = () => {
+				const padding = parseFloat(global.getComputedStyle(overlay).paddingBottom) || 0;
+				const height = row.getBoundingClientRect().height;
+				row.style.setProperty("margin-top", `${-(height + padding)}px`, "important");
+				row.style.setProperty("margin-bottom", `${padding}px`, "important");
+				row.style.setProperty("position", "relative");
+				overlay.style.paddingBottom = `${height + padding}px`;
 			};
-			const itemsContainer = this.librarySection.querySelector(".itemsContainer");
-			const items = getContainerItems(itemsContainer);
-			this.banner.querySelector(".misty-banner-library").appendChild(this.librarySection);
-			if (itemsContainer && items.length) {
-				global.setTimeout(() => {
-					if (itemsContainer.isConnected) itemsContainer.items = items;
-				}, 0);
-			}
+			// Read the original overlay padding each time, not the space added for logos.
+			const refresh = () => { overlay.style.removeProperty("padding-bottom"); update(); };
+			const observer = global.ResizeObserver ? new global.ResizeObserver(refresh) : null;
+			if (observer) { observer.observe(row); observer.observe(this.banner); }
+			global.addEventListener("resize", refresh);
+			this.libraryPlacement = { cleanup: () => {
+				if (observer) observer.disconnect();
+				global.removeEventListener("resize", refresh);
+				for (const [key, value, priority] of saved) {
+					if (value) row.style.setProperty(key, value, priority);
+					else row.style.removeProperty(key);
+				}
+				overlay.style.removeProperty("padding-bottom");
+			} };
+			refresh();
 		}
 
 		applyLibraryCardFilter() {
@@ -456,13 +473,7 @@
 			this.clearLibraryCardFilter();
 			this.librarySection.classList.remove("misty-library-section");
 			const placement = this.libraryPlacement;
-			if (placement && placement.parent && placement.parent.isConnected && this.librarySection.isConnected) {
-				if (placement.nextSibling && placement.nextSibling.parentNode === placement.parent) {
-					placement.parent.insertBefore(this.librarySection, placement.nextSibling);
-				} else {
-					placement.parent.appendChild(this.librarySection);
-				}
-			}
+			if (placement && placement.cleanup) placement.cleanup();
 			this.libraryPlacement = null;
 		}
 
